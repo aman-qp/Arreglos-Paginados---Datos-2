@@ -6,15 +6,17 @@
 #include <stdexcept>
 #include "PagedArray.h"
 
-enum SortAlgorithm { QUICK_SORT, INSERTION_SORT, BUBBLE_SORT };
+enum AlgoritmoOrdenamiento { QUICK_SORT, INSERTION_SORT, BUBBLE_SORT };
 
-SortAlgorithm getSortAlgorithm(const std::string &alg) {
+// Convertir una cadena al tipo de algoritmo de ordenamiento correspondiente
+AlgoritmoOrdenamiento getSortAlgorithm(const std::string &alg) {
     if (alg == "QS") return QUICK_SORT;
     if (alg == "IS") return INSERTION_SORT;
     if (alg == "BS") return BUBBLE_SORT;
-    throw std::invalid_argument("Invalid sorting algorithm");
+    throw std::invalid_argument("Algoritmo de ordenamiento inválido");
 }
 
+// Ordenar un arreglo usando QuickSort
 template <typename T>
 void quickSort(T &array, size_t left, size_t right) {
     if (left < right) {
@@ -29,12 +31,12 @@ void quickSort(T &array, size_t left, size_t right) {
             }
         }
         std::swap(array[storeIndex], array[right]);
-
         if (storeIndex > left) quickSort(array, left, storeIndex - 1);
         if (storeIndex < right) quickSort(array, storeIndex + 1, right);
     }
 }
 
+// Ordenar un arreglo usando InsertionSort
 template <typename T>
 void insertionSort(T &array, size_t size) {
     for (size_t i = 1; i < size; ++i) {
@@ -48,6 +50,7 @@ void insertionSort(T &array, size_t size) {
     }
 }
 
+// Ordenar un arreglo usando BubbleSort
 template <typename T>
 void bubbleSort(T &array, size_t size) {
     for (size_t i = 0; i < size - 1; ++i) {
@@ -61,7 +64,7 @@ void bubbleSort(T &array, size_t size) {
 
 int main(int argc, char* argv[]) {
     if (argc != 7) {
-        std::cerr << "Usage: " << argv[0] << " -input <INPUT FILE PATH> -output <OUTPUT FILE PATH> -alg <ALGORITHM>" << std::endl;
+        std::cerr << "Uso: " << argv[0] << " -input <RUTA DEL ARCHIVO DE ENTRADA> -output <RUTA DEL ARCHIVO DE SALIDA> -alg <ALGORITMO>" << std::endl;
         return 1;
     }
 
@@ -75,43 +78,43 @@ int main(int argc, char* argv[]) {
             if (i + 1 < argc) {
                 inputPath = argv[++i];
             } else {
-                std::cerr << "Error: Missing value for -input" << std::endl;
+                std::cerr << "Error: Falta el valor para -input" << std::endl;
                 return 1;
             }
         } else if (std::string(argv[i]) == "-output") {
             if (i + 1 < argc) {
                 outputPath = argv[++i];
             } else {
-                std::cerr << "Error: Missing value for -output" << std::endl;
+                std::cerr << "Error: Falta el valor para -output" << std::endl;
                 return 1;
             }
         } else if (std::string(argv[i]) == "-alg") {
             if (i + 1 < argc) {
                 algStr = argv[++i];
             } else {
-                std::cerr << "Error: Missing value for -alg" << std::endl;
+                std::cerr << "Error: Falta el valor para -alg" << std::endl;
                 return 1;
             }
         } else {
-            std::cerr << "Invalid argument: " << argv[i] << std::endl;
+            std::cerr << "Argumento inválido: " << argv[i] << std::endl;
             return 1;
         }
     }
 
-    SortAlgorithm algorithm;
+    AlgoritmoOrdenamiento algoritmo;
     try {
-        algorithm = getSortAlgorithm(algStr);
+        algoritmo = getSortAlgorithm(algStr);
     } catch (const std::invalid_argument &e) {
         std::cerr << e.what() << std::endl;
         return 1;
     }
 
-    const size_t pageSize = 4096; // Ajusta según tus necesidades
+    const size_t pageSize = 4096; // Ajustar según sea necesario
     PagedArray pagedArray(inputPath, pageSize);
 
     auto start = std::chrono::high_resolution_clock::now();
 
-    switch (algorithm) {
+    switch (algoritmo) {
         case QUICK_SORT:
             quickSort(pagedArray, 0, pagedArray.size() - 1);
             break;
@@ -129,7 +132,7 @@ int main(int argc, char* argv[]) {
     // Crear el archivo binario ordenado
     std::ofstream outputFile(outputPath, std::ios::binary);
     if (!outputFile) {
-        std::cerr << "Error opening output file" << std::endl;
+        std::cerr << "Error al abrir el archivo de salida" << std::endl;
         return 1;
     }
 
@@ -139,10 +142,10 @@ int main(int argc, char* argv[]) {
     }
     outputFile.close();
 
-    // Convertir el archivo binario a un archivo de texto legible
+    // Crear un archivo de texto legible
     std::ofstream readableOutputFile(outputPath + ".txt");
     if (!readableOutputFile) {
-        std::cerr << "Error opening readable output file" << std::endl;
+        std::cerr << "Error al abrir el archivo de salida legible" << std::endl;
         return 1;
     }
 
@@ -154,10 +157,10 @@ int main(int argc, char* argv[]) {
     }
     readableOutputFile.close();
 
-    std::cout << "Sorting completed in " << elapsed.count() << " seconds." << std::endl;
-    std::cout << "Algorithm used: " << algStr << std::endl;
-    std::cout << "Page faults: " << pagedArray.getPageFaults() << std::endl;
-    std::cout << "Page hits: " << pagedArray.getPageHits() << std::endl;
+    std::cout << "Ordenamiento completado en " << elapsed.count() << " segundos." << std::endl;
+    std::cout << "Algoritmo utilizado: " << algStr << std::endl;
+    std::cout << "Fallos de página: " << pagedArray.getPageFaults() << std::endl;
+    std::cout << "Aciertos de página: " << pagedArray.getPageHits() << std::endl;
 
     return 0;
 }
